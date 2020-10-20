@@ -1,0 +1,80 @@
+name: Remote Cron Task
+on:
+  push:
+    branches: [feature/cron]
+  # schedule:
+  #   # * is a special character in YAML so you have to quote this string
+  #   - cron: '*/15 * * * *'
+jobs:
+  execute_cron:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_CONTEXT: ${{ toJson(github) }}
+      SITE_ID: ${{ secrets.PANTHEON_SITE_ID }}
+      TERMINUS_MACHINE_TOKEN: ${{ secrets.TERMINUS_MACHINE_TOKEN }}
+    steps:
+      - name: Installing PHP
+        uses: shivammathur/setup-php@2.4.2
+        with:
+          php-version: '7.4'
+          coverage: none
+
+      - name: Install SSH Key
+        uses: shimataro/ssh-key-action@v2.0.3
+        with:
+          key: ${{ secrets.SSH_KEY }}
+          known_hosts: drush.in
+
+      - name: Add known hosts
+        run: |
+          APP_SERVER=$(echo "appserver.dev.${SITE_ID}.drush.in")
+          CODE_SERVER=$(echo "codeserver.dev.${SITE_ID}.drush.in")
+          ssh-keyscan -t rsa -p 2222 $APP_SERVER >> ~/.ssh/known_hosts
+          ssh-keyscan -t rsa -p 2222 $CODE_SERVER >> ~/.ssh/known_hosts
+
+      - name: Clone Pantheon site repo, set to live tag
+        id: clone-pantheon-site
+        run: |
+          REMOTE=$(echo "ssh://codeserver.dev.${SITE_ID}@codeserver.dev.${SITE_ID}.drush.in:2222/~/repository.git")
+          git init
+          git remote add origin $REMOTE
+          git fetch
+          LATEST_TAG=$(git tag | grep pantheon_live_ | sort -k1.15n | tail -1)
+          git checkout $LATEST_TAG
+          git pull origin $LATEST_TAG
+          rm -rf vendor
+
+      - name: Get Composer Cache Directory
+        id: composer-cache
+        run: |
+          echo "::set-output name=dir::$(composer config cache-files-dir)"
+
+      - name: Cache Composer Downloads
+        uses: actions/cache@v1
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
+
+      - name: Install composer dependencies
+        run: |
+          composer --no-interaction --no-progress install
+
+      - name: Create bin aliases
+        run: |
+          echo "$GITHUB_WORKSPACE/vendor/bin" >> $GITHUB_PATH
+
+      - name: Authenticate Terminus
+        run: |
+          terminus auth:login --machine-token $TERMINUS_MACHINE_TOKEN
+
+      - name: Set temporary connection credentials
+        run: |
+          CREDS=$(php private/scripts/cron/set_connection.php)
+          for CRED in ${CREDS};do
+            echo $CRED >> $GITHUB_ENV
+          done
+
+      - name: Run Drush command
+        run: drush status --full --show-passwords

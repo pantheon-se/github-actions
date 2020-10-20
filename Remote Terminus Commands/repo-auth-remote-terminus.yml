@@ -1,0 +1,27 @@
+name: Remote Terminus
+on:
+  repository_dispatch:
+    types: [remote-terminus]
+jobs:
+  remote_terminus:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_CONTEXT: ${{ toJson(github) }}
+    steps:
+      - name: Install SSH Key
+        uses: shimataro/ssh-key-action@v2.0.3
+        with:
+          key: ${{ secrets.SSH_KEY }}
+          known_hosts: drush.in
+
+      - name: Installing Terminus
+        uses: kopepasah/setup-pantheon-terminus@master
+        with:
+          pantheon-machine-token: ${{ secrets.TERMINUS_MACHINE_TOKEN }}
+
+      - name: Run Terminus command
+        if: github.event.client_payload.command != null
+        env:
+          COMMAND: ${{ github.event.client_payload.command }}
+        run: |
+          terminus $COMMAND

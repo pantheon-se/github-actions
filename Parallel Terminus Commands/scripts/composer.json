@@ -1,0 +1,14 @@
+{
+    "name": "kyletaylored/terminus-parallel",
+    "description": "Enabling Terminus commands in parallel",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Kyle Taylor",
+            "email": "kyle.taylor@pantheon.io"
+        }
+    ],
+    "require": {
+        "pantheon-systems/terminus": "^2.4"
+    }
+}

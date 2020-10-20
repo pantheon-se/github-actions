@@ -1,0 +1,65 @@
+# Remote Terminus using Github Actions
+A poor man's way to execute Terminus commands via a Web API (Github Repository Dispatches).
+
+Things you will need:
+- Github Token
+- Pantheon Machine Token
+- SSH Key (in PEM format)
+
+## Installation
+Use the following steps to configure your workflow environment.
+
+### 1. Generate SSH key
+
+Generate a new SSH key that will be used to authenticate the Github Action container with Pantheon.
+
+```
+ssh-keygen -m PEM -f ~/.ssh/github_action
+```
+
+You need to copy the private key into your repository secrets, and the public key into your Pantheon account. If on a Mac, you can use the `pbcopy` command to copy to your clipboard.
+
+```
+pbcopy < ~/.ssh/github_action
+```
+
+- In your Github repo, name the variable `SSH_KEY` and paste in the value.
+- In your [Pantheon account dashboard](https://dashboard.pantheon.io/users#account/ssh-keys), paste your public key (`github_action.pub`) into the text field. Consider adjusting the string label at the end of the key to something more descriptive, like **Github Action**.
+
+### 2. Generate Pantheon Machine Token
+
+1. In your [Pantheon account dashboard](https://dashboard.pantheon.io/users#account/tokens/list), generate a new Machine Token.
+2. Copy the value from the browser.
+3. Open your repository secrets, and create a new variable called `TERMINUS_MACHINE_TOKEN`.
+4. Paste in the machine token and click save.
+
+### 3. Generate Github Access Token
+
+1. Go to your [Github tokens](https://github.com/settings/tokens)
+2. Click "Generate New Token"
+3. Give the token a name, and check `workflow` as the only permission (`@todo` confirm this)
+4. Click "Generate Token"
+5. Save the token to use in the next section.
+
+## Create Repository Dispatch Request
+
+Generate a new request using the following information, but a few important things to note:
+
+- The API path requires the repo owner and name as part of the path (`:repo_owner/:repo_name`)
+- The authorization is a bearer token and your Github access token
+- If using the provided workflow template, the `event_type` is specific to this workflow. **DO NOT CHANGE**.
+
+```bash
+curl --location --request POST 'https://api.github.com/repos/:repo_owner/:repo_name/dispatches' \
+--header 'Accept: application/vnd.github.everest-preview+json' \
+--header 'Authorization: Bearer <ACCESS TOKEN>' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "event_type": "remote-terminus",
+    "client_payload": {
+        "command": "drush dunder-mifflin-sales.dev -- cr"
+    }
+}'
+```
+
+That's pretty much it! Now you can create web generated Terminus commands without a local environment.

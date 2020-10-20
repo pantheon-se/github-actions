@@ -1,0 +1,33 @@
+name: Send Site List
+
+on:
+  push:
+    branches: [main]
+  # schedule:
+  # * is a special character in YAML so you have to quote this string
+  # - cron: '*/15 * * * *'
+jobs:
+  default:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Installing PHP
+        uses: shivammathur/setup-php@2.4.2
+        with:
+          php-version: '7.4'
+          coverage: none
+      - name: Install composer dependencies
+        run: cd .github/scripts && composer install --no-progress
+      - name: Authenticate Terminus
+        run: |
+          php .github/scripts/auth.php
+        env:
+          TERMINUS_MACHINE_TOKEN: ${{ secrets.TERMINUS_MACHINE_TOKEN }}
+      - name: Process sites and owners
+        env:
+          PANTHEON_ORGANIZATION_ID: ${{ secrets.PANTHEON_ORGANIZATION_ID }}
+          SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
+          MAIL_RECIPIENT: ${{ secrets.MAIL_RECIPIENT }}
+          MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
+        run: |
+          php .github/scripts/sites.php
