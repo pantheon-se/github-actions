@@ -17,8 +17,8 @@ Some organizations need to keep track of their site inventory in an external sys
 3. Install Composer dependencies
 4. Authenticate with Terminus
 5. Run Site Inventory Script
-  - Get the list of sites in the organization
-  - Get the list of users in the organization
-  - Loop through the sites, and replace the user UUID with their email
-  - Encode data in a JSON file
-  - Email JSON file to defined recipient
+   - Get the list of sites in the organization
+   - Get the list of users in the organization
+   - Loop through the sites, and replace the user UUID with their email
+   - Encode data in a JSON file
+   - Email JSON file to defined recipient
