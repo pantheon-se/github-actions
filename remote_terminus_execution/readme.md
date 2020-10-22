@@ -1,11 +1,14 @@
 # Remote Terminus Command Execution
 
-A poor man's way to execute Terminus commands via a Web API, using Github Repository Dispatches and Github Actions.
+A poor man's way to execute Terminus commands via a Web API, using Github Repository Dispatches and Github Actions. 
+
+**This does not require any of the code from the repository the Github Action workflow is associated with.*
 
 ## Secrets Required
-- Github Token
-- Terminus Machine Token
-- SSH Key (in PEM format)
+- Terminus Machine Toke (`TERMINUS_MACHINE_TOKEN`)
+- SSH Key in PEM format (`PRIVATE_SSH_KEY`)
+
+You will also need a personal **Github Token** to trigger the repository dispatch.
 
 ## Installation
 Use the following steps to configure your workflow environment.
@@ -47,7 +50,7 @@ pbcopy < ~/.ssh/github_action
 Generate a new request using the following information, but a few important things to note:
 
 - The API path requires the repo owner and name as part of the path (`:repo_owner/:repo_name`)
-- The authorization is a bearer token and your Github access token
+- The authorization is a bearer token and is your Github access token
 - If using the provided workflow template, the `event_type` is specific to this workflow. **DO NOT CHANGE**.
 
 ```bash
@@ -63,4 +66,9 @@ curl --location --request POST 'https://api.github.com/repos/:repo_owner/:repo_n
 }'
 ```
 
-That's pretty much it! Now you can create web generated Terminus commands without a local environment.
+## Workflow Overview
+
+1. Trigger on repository dispatch using the `remote-terminus` event_type key.
+1. Install private SSH key from secrets to authenticate with Terminus user
+1. Install Terminus and authenticate with machine token from secrets
+1. Run Terminus command from API payload.
