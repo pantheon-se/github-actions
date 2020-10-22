@@ -19,13 +19,13 @@ jobs:
       - name: Install SSH Key
         uses: shimataro/ssh-key-action@v2.0.3
         with:
-          key: ${{ secrets.TERMINUS_SSH_KEY }}
+          key: ${{ secrets.PRIVATE_SSH_KEY }}
           known_hosts: drush.in
 
       - name: Get Composer Cache Directory
         id: composer-cache
         run: |
-          echo "::set-output name=dir::$(cd .github/scripts/php && composer config cache-files-dir)"
+          echo "::set-output name=dir::$(cd scripts && composer config cache-files-dir)"
 
       - name: Cache Composer Downloads
         uses: actions/cache@v1
@@ -37,11 +37,11 @@ jobs:
 
       - name: Install composer dependencies
         run: |
-          cd .github/scripts/php && composer --no-interaction --no-progress --prefer-dist install
+          cd scripts && composer --no-interaction --no-progress --prefer-dist install
 
       - name: Create Terminus alias, add Note
         run: |
-          echo "::add-path::.github/scripts/php/vendor/bin"
+          echo "::add-path::scripts/vendor/bin"
           echo "::set-env name=NOTE::$(git log -1 --pretty=tformat:'%s')"
 
       - name: Authenticate Terminus
@@ -52,12 +52,12 @@ jobs:
 
       - name: Parallel Processing
         run: |
-          terminus org:site:list ${ORG_UUID} --format list --upstream ${UPSTREAM_UUID} --field name | sort -V | parallel --jobs 100 .github/scripts/shell/timeout-deploy.sh {}
+          terminus org:site:list ${ORG_UUID} --format list --upstream ${UPSTREAM_UUID} --field name | sort -V | parallel --jobs 100 scripts/timeout-deploy.sh {}
         env:
           ORG_UUID: ${{ secrets.ORG_UUID }}
           UPSTREAM_UUID: ${{ secrets.UPSTREAM_UUID }}
 
       - name: Send Slack update
-        run: php .github/scripts/php/slack.php
+        run: php scripts/slack.php
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
