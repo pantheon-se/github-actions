@@ -6,7 +6,7 @@ A list of Github Action workflows that can be used to integrate with Pantheon th
 - [Parallel Terminus Commands](/parallel_terminus_commands)
 - [Remote Terminus Execution (Web API)](/remote_terminus_execution)
 - [Scheduled Terminus Tasks](/scheduled_terminus_tasks)
-
+- [Automated Upstream Sync](/upstream_core_sync)
 
 ## Github Actions Cheat Sheet
 
