@@ -1,9 +1,10 @@
-# Remote Terminus using Github Actions
-A poor man's way to execute Terminus commands via a Web API (Github Repository Dispatches).
+# Remote Terminus Command Execution
 
-Things you will need:
+A poor man's way to execute Terminus commands via a Web API, using Github Repository Dispatches and Github Actions.
+
+## Secrets Required
 - Github Token
-- Pantheon Machine Token
+- Terminus Machine Token
 - SSH Key (in PEM format)
 
 ## Installation

@@ -1,11 +1,9 @@
-name: Send Site List
+name: Terminus Site Inventory
 
 on:
-  push:
-    branches: [main]
-  # schedule:
-  # * is a special character in YAML so you have to quote this string
-  # - cron: '*/15 * * * *'
+  schedule:
+    # * is a special character in YAML so you have to quote this string
+    - cron: '*/15 * * * *'
 jobs:
   default:
     runs-on: ubuntu-latest
@@ -17,10 +15,10 @@ jobs:
           php-version: '7.4'
           coverage: none
       - name: Install composer dependencies
-        run: cd .github/scripts && composer install --no-progress
+        run: cd scripts && composer install --no-progress
       - name: Authenticate Terminus
         run: |
-          php .github/scripts/auth.php
+          php scripts/auth.php
         env:
           TERMINUS_MACHINE_TOKEN: ${{ secrets.TERMINUS_MACHINE_TOKEN }}
       - name: Process sites and owners
@@ -30,4 +28,4 @@ jobs:
           MAIL_RECIPIENT: ${{ secrets.MAIL_RECIPIENT }}
           MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
         run: |
-          php .github/scripts/sites.php
+          php scripts/sites.php
