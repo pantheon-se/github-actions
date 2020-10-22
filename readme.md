@@ -13,6 +13,7 @@ A list of Github Action workflows that can be used to integrate with Pantheon th
 Github Actions has some platform-specific methods for doing special tasks in builds. Some are based on specific YML keys like `run` or `env`, others are inline commands that use a colon-based syntax `::set-env name=SIZE::`.
 
 **Setting env variables between steps**
+
 When you need to dynamically set a shell variable to be accessible between steps, you need to output it to the `$GITHUB_ENV` variable.
 ```
 echo "VAR_NAME=VAR_VALUE" >> $GITHUB_ENV
@@ -22,6 +23,7 @@ The colon syntax will be deprecated, so don't use this:
 ```echo "::set-env name=SIZE::$(git count-objects -H)"```
 
 **Adding custom paths**
+
 Similar to env variables, you can dynamically make a path available to steps by appending it to the `$GITHUB_PATH` variable.
 
 ```
@@ -36,6 +38,7 @@ echo "::add-path::.github/scripts/php/vendor/bin"
 Common gotchas when working with Terminus in a build container.
 
 **Permission denied (password,publickey)**
+
 When running commands that need to reach the appserver itself, such as remote Drush or WP-CLI, in addition to a Terminus machine token, you will need to install a private SSH key that also has the public key associated with the user account that issued the machine token.
 
 This private key will need to be generated in a PEM format, as the standard OpenSSH format has some issues in the build containers.
@@ -45,6 +48,7 @@ ssh-keygen -m PEM -f ~/.ssh/id_rsa
 ```
 
 **Host key verification failed. fatal: Could not read from remote repository.**
+
 If you need to connect to the codeserver on Pantheon, you have to manually add the full codeserver/appserver paths for the site. Something like the following:
 
 ```
@@ -53,6 +57,7 @@ ssh-keyscan -t rsa -p 2222 "codeserver.dev.${SITE_ID}.drush.in" >> ~/.ssh/known_
 ```
 
 **Terminus Authentication**
+
 There are two approaches to Terminus authentication, both work just fine but can be redundant depending on your setup:
 
 1. Use the Terminus Github Action ([kopepasah/setup-pantheon-terminus](https://github.com/marketplace/actions/setup-pantheon-terminus))
