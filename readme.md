@@ -12,16 +12,16 @@ A list of Github Action workflows that can be used to integrate with Pantheon th
 
 Github Actions has some platform-specific methods for doing special tasks in builds. Some are based on specific YML keys like `run` or `env`, others are inline commands that use a colon-based syntax `::set-env name=SIZE::`.
 
-### Setting env variables between steps
+### Dynamically set env variables
 When you need to dynamically set a shell variable to be accessible between steps, you need to output it to the `$GITHUB_ENV` variable.
 ```
 echo "VAR_NAME=VAR_VALUE" >> $GITHUB_ENV
 ```
 
 The colon syntax will be deprecated, so don't use this:
-```echo "::set-env name=SIZE::$(git count-objects -H)"```
+```echo "::set-env name=VAR_NAME::$(echo $VAR_VALUE)"```
 
-### Adding custom paths
+### Dynamically add custom paths
 
 Similar to env variables, you can dynamically make a path available to steps by appending it to the `$GITHUB_PATH` variable.
 
@@ -30,7 +30,7 @@ echo "$GITHUB_WORKSPACE/path/to/bin" >> $GITHUB_PATH
 ```
 
 The colon syntax will be deprecated, so don't use this:
-echo "::add-path::.github/scripts/php/vendor/bin"
+`echo "::add-path::path/to/bin"`
 
 ## FAQ
 
