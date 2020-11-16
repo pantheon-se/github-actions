@@ -24,3 +24,8 @@ The general approach for this requires wrapping multiple Terminus commands into 
      Utilize `&` to send shell process to the background, add delay (`sleep`) between processes, wait for all background processes to finish (use `wait`).
    - **Parallel Processing**
      Pipe site IDs to GNU Parallel, set max jobs capacity, pass site ID to script, wait for job queue to complete.  
+
+## FAQ
+
+### SSH Key
+You will need to have the private SSH key (associated with the user issued the Terminus Machine Token) added as a secret repo variable, because it will be used to authenticate any Terminus application commands (Drush or WP CLI).
