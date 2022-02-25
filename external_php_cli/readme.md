@@ -5,7 +5,57 @@ When running Drush, WP, or other PHP CLI commands, you may need to bypass any ap
 This action will make a copy of the Pantheon site repository, fetch the public database credentials, then use the build container PHP configuration to bypass any appserver limitations and run a Drush command.
 
 **Note**
-This process does require a configuration adjustment within the application in order to swap out the connection credentials to remotely connect to the live database.
+
+This process does require a configuration adjustment within the application in order to swap out the connection credentials to remotely connect to the live database. See example below:
+
+### Drupal
+```php
+<?php
+
+// Append the following to your settings.php file.
+
+/**
+ * Override database credentials for external cron tasks.
+ */
+if ((php_sapi_name() == "cli") && getenv('CRON_DB_USER')) {
+
+   // Increase memory to 1GB
+   ini_set('memory_limit', '1028M');
+
+   // Override database
+   $databases['default']['default'] = [
+     'database' => getenv('CRON_DB_NAME'),
+     'username' => getenv('CRON_DB_USER'),
+     'password' => getenv('CRON_DB_PASS'),
+     'host' => getenv('CRON_DB_HOST'),
+     'port' => getenv('CRON_DB_PORT'),
+     'driver' => 'mysql',
+   ];
+}
+```
+
+
+### WordPress
+```php
+<?php
+
+// Append the following to your wp-config.php file.
+
+/**
+ * Override database credentials for external cron tasks.
+ */
+if ((php_sapi_name() == "cli") && getenv('CRON_DB_USER')) {
+
+   // Increase memory to 1GB
+   ini_set('memory_limit', '1028M');
+   
+   // Override database
+   define('DB_NAME', $_ENV['CRON_DB_NAME']);
+   define('DB_USER', $_ENV['CRON_DB_USER']);
+   define('DB_PASSWORD', $_ENV['CRON_DB_PASS']);
+   define('DB_HOST', $_ENV['CRON_DB_HOST'] . ':' . $_ENV['CRON_DB_PORT']);
+}
+```
 
 ## Secrets Required
 
