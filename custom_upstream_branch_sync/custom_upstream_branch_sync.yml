@@ -1,0 +1,43 @@
+name: Deploy Branch to Pantheon Canary Multidev
+on:
+  push:
+    branches:
+      - '*'
+      - '!master'
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.PANTHEON_SSH_KEY }}
+          config: ${{ secrets.SSH_CONFIG }}
+          known_hosts: ${{ secrets.KNOWN_HOSTS }}
+      
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.0'
+
+      - name: Installing Terminus
+        uses: pantheon-systems/terminus-github-actions@main
+        with:
+          pantheon-machine-token: ${{ secrets.PANTHEON_MACHINE_TOKEN }}
+
+      - name: Get Canary site
+        run: |
+          CANARY_SITE=$(terminus org:site:list ${ORG_UUID} --format list --upstream ${UPSTREAM_UUID} --field name --tag canary | head -1)
+          echo "CANARY_SITE=$CANARY_SITE" >> $GITHUB_ENV
+          CANARY_REPO=$(terminus connection:info ${CANARY_SITE}.dev --fields git_url --format list)
+          echo "CANARY_REPO=$CANARY_REPO" >> $GITHUB_ENV
+        env:
+          ORG_UUID: ${{ secrets.PANTHEON_ORG_UUID }}
+          UPSTREAM_UUID: ${{ secrets.PANTHEON_UPSTREAM_UUID }}
+
+      - name: Deployer
+        run: |
+          BASE_BRANCH=${GITHUB_REF##*/}
+          git remote add pantheon $CANARY_REPO
+          git push -u pantheon HEAD:refs/heads/$BASE_BRANCH
+          terminus multidev:create $CANARY_SITE.dev $BASE_BRANCH
