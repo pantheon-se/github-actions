@@ -54,12 +54,14 @@ When running commands that need to reach the appserver itself, such as remote Dr
 - `KNOWN_HOSTS`: You do not need a known_hosts config unless required, so this only needs to be a single space as the secret variable content.
 
 **PANTHEON_SSH_KEY**
+
 This private key will need to be generated in a PEM format, as the standard OpenSSH format has some issues in the build containers.
 ```
 ssh-keygen -m PEM -f ~/.ssh/id_rsa
 ```
 
 **SSH_CONFIG**
+
 The following is required for the SSH configuration.
 ```
 Host *.drush.in
