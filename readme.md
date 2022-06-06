@@ -35,16 +35,35 @@ The colon syntax will be deprecated, so don't use this:
 
 ## FAQ
 
-Common gotchas when working with Terminus in a build container.
+Known issues and solutions when working with Terminus in a build container.
 
 ### Permission denied (password,publickey)
 
-When running commands that need to reach the appserver itself, such as remote Drush or WP-CLI, in addition to a Terminus machine token, you will need to install a private SSH key that also has the public key associated with the user account that issued the machine token.
+When running commands that need to reach the appserver itself, such as remote Drush or WP-CLI, in addition to a Terminus machine token, you will need to install a private SSH key that also has the public key associated with the user account that issued the machine token. The easiest way to do this is to use [shimataro/ssh-key-action](https://github.com/marketplace/actions/install-ssh-key) to setup the SSH configuration. Using the example snippet below:
 
+```yaml     
+  - uses: shimataro/ssh-key-action@v2
+    with:
+      key: ${{ secrets.PANTHEON_SSH_KEY }}
+      config: ${{ secrets.SSH_CONFIG }}
+      known_hosts: ${{ secrets.KNOWN_HOSTS }}
+```
+
+- `PANTHEON_SSH_KEY`: The _PRIVATE_ SSH key that is associated with the public key that has been added to the Pantheon user account.
+- `SSH_CONFIG`: A basic SSH config when connecting to the `drush.in` addresses for running WP / Drush commands.
+- `KNOWN_HOSTS`: You do not need a known_hosts config unless required, so this only needs to be a single space as the secret variable content.
+
+**PANTHEON_SSH_KEY**
 This private key will need to be generated in a PEM format, as the standard OpenSSH format has some issues in the build containers.
-
 ```
 ssh-keygen -m PEM -f ~/.ssh/id_rsa
+```
+
+**SSH_CONFIG**
+The following is required for the SSH configuration.
+```
+Host *.drush.in
+  StrictHostKeyChecking no
 ```
 
 ### Host key verification failed. fatal: Could not read from remote repository.
@@ -58,12 +77,17 @@ ssh-keyscan -t rsa -p 2222 "codeserver.dev.${SITE_ID}.drush.in" >> ~/.ssh/known_
 
 ### Terminus Authentication
 
-There are two approaches to Terminus authentication, both work just fine but can be redundant depending on your setup:
+We recommend using the official Pantheon Github Action for setting up Terminus:
 
-1. Use the Terminus Github Action ([kopepasah/setup-pantheon-terminus](https://github.com/marketplace/actions/setup-pantheon-terminus))
-2. Include Terminus in the repo dependencies (`composer require pantheon-systems/terminus`)
+- [pantheon-systems/terminus-github-actions](https://github.com/pantheon-systems/terminus-github-actions)
 
-Use whichever method is most efficient for your specific setup.
+```yaml
+  - name: Install Terminus
+    uses: pantheon-systems/terminus-github-actions@main
+    with:
+      pantheon-machine-token: ${{ secrets.PANTHEON_MACHINE_TOKEN }}
+      terminus-version: 2.6.5 # Optional
+```
 
 # Disclaimer
 THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
