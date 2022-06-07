@@ -7,6 +7,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      GITHUB_CONTEXT: ${{ toJson(github) }}
     steps:
       - uses: actions/checkout@v1
       - uses: shimataro/ssh-key-action@v2
@@ -18,12 +20,13 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.0'
+          php-version: '7.4'
 
       - name: Installing Terminus
         uses: pantheon-systems/terminus-github-actions@main
         with:
           pantheon-machine-token: ${{ secrets.PANTHEON_MACHINE_TOKEN }}
+          terminus-version: 2.6.5
 
       - name: Get Canary site
         run: |
@@ -35,9 +38,34 @@ jobs:
           ORG_UUID: ${{ secrets.PANTHEON_ORG_UUID }}
           UPSTREAM_UUID: ${{ secrets.PANTHEON_UPSTREAM_UUID }}
 
-      - name: Deployer
+      - name: Sync code to site
+        env:
+          GIT_EMAIL: ${{ github.event.commits[0].committer.email }}
+          GIT_NAME: ${{ github.event.commits[0].committer.name }}
         run: |
+          # Configure git defaults
+          git config --global user.email "$GIT_EMAIL"
+          git config --global user.name "$GIT_NAME"
+          
+          # Setup remote branch connection
           BASE_BRANCH=${GITHUB_REF##*/}
+          echo "BASE_BRANCH=$BASE_BRANCH" >> $GITHUB_ENV
           git remote add pantheon $CANARY_REPO
+
+          # Check if remote branch exists
+          _check_branch=$(git ls-remote --heads pantheon $BASE_BRANCH)
+          [[ -n ${_check_branch} ]] && git pull pantheon $BASE_BRANCH --rebase
+
+          # Sync branch
           git push -u pantheon HEAD:refs/heads/$BASE_BRANCH
-          terminus multidev:create $CANARY_SITE.dev $BASE_BRANCH
+
+      - name: Check branch character length
+        id: char_check
+        run: |
+          if [[ ${#BASE_BRANCH} -gt 11 ]]; then echo "Multidev name must be 11 characters or less."; exit 1; fi
+
+      - name: Create multidev
+        if: ${{ success() && steps.char_check.conclusion == 'success' }}
+        continue-on-error: true
+        run: |
+          terminus env:create $CANARY_SITE.dev $BASE_BRANCH
