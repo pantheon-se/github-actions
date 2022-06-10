@@ -20,4 +20,4 @@ When using a Custom Upstream, sync new upstream branches automatically to a down
 1. Sync branch to canary site repo
 1. Create multidev environment on new branch (if able to)
 
-Largely based on the work of [Tyler Fahey](https://github.com/twfahey1) and his [GitHub Actions]([url](https://medium.com/swlh/pantheon-and-github-actions-automated-deployments-via-github-actions-c245aa954797)) documentation.
+Largely based on the work of [Tyler Fahey](https://github.com/twfahey1) and his [GitHub Actions](https://medium.com/swlh/pantheon-and-github-actions-automated-deployments-via-github-actions-c245aa954797) documentation.
