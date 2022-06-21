@@ -9,18 +9,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Installing PHP
-        uses: shivammathur/setup-php@2.4.2
+
+      - uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.PANTHEON_SSH_KEY }}
+          config: ${{ secrets.SSH_CONFIG }}
+          known_hosts: ${{ secrets.KNOWN_HOSTS }}
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
         with:
           php-version: '7.4'
-          coverage: none
-      - name: Install composer dependencies
-        run: cd scripts && composer install --no-progress
-      - name: Authenticate Terminus
-        run: |
-          php scripts/auth.php
-        env:
-          TERMINUS_MACHINE_TOKEN: ${{ secrets.TERMINUS_MACHINE_TOKEN }}
+
+      - name: Install Terminus
+        uses: pantheon-systems/terminus-github-actions@main
+        with:
+          pantheon-machine-token: ${{ secrets.TERMINUS_MACHINE_TOKEN }}
+
       - name: Process sites and owners
         env:
           PANTHEON_ORGANIZATION_ID: ${{ secrets.PANTHEON_ORGANIZATION_ID }}

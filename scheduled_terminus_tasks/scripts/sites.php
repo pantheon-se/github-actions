@@ -10,10 +10,10 @@ $org_id = getenv('PANTHEON_ORGANIZATION_ID');
 $time = date("Y-m-d H:i:s");
 
 // Get sites
-$sites = json_decode(shell_exec("scripts/vendor/bin/terminus org:site:list --format=json " . $org_id), 1);
+$sites = json_decode(shell_exec("terminus org:site:list --format=json " . $org_id), 1);
 
 // Get users
-$users = json_decode(shell_exec("scripts/vendor/bin/terminus org:people:list --format=json " . $org_id), 1);
+$users = json_decode(shell_exec("terminus org:people:list --format=json " . $org_id), 1);
 
 // Update site owner with email.
 echo "Parsing sites for owners... \n";
@@ -23,7 +23,7 @@ foreach ($sites as &$site) {
     $site['owner'] = $users[$site['owner']]['email'];
   } else {
     // If not, manually get the site owner
-    $team = json_decode(shell_exec("scripts/vendor/bin/terminus site:team:list --format=json " . $site['id']), 1);
+    $team = json_decode(shell_exec("terminus site:team:list --format=json " . $site['id']), 1);
 
     // Merge with existing list so we don't have to do this again.
     $users = array_merge_recursive($users, $team);
