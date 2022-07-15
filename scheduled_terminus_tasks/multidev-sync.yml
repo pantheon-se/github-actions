@@ -1,0 +1,32 @@
+name: Terminus Multidev Backup
+# Sync a multidev environment once a day from the live environment to a multidev called backup.
+
+on:
+  schedule:
+    # * is a special character in YAML so you have to quote this string
+    - cron: '0 0 * * *'
+jobs:
+  default:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.PANTHEON_SSH_KEY }}
+          config: ${{ secrets.SSH_CONFIG }}
+          known_hosts: ${{ secrets.KNOWN_HOSTS }}
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '7.4'
+
+      - name: Install Terminus
+        uses: pantheon-systems/terminus-github-actions@main
+        with:
+          pantheon-machine-token: ${{ secrets.TERMINUS_MACHINE_TOKEN }}
+
+      - name: Sync multidev
+        run: |
+          terminus env:clone-content ${{ secrets.PANTHEON_SITE_ID }}.live backup
