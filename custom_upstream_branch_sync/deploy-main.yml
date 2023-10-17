@@ -1,0 +1,104 @@
+name: Deploy Downstream Sites
+on:
+  pull_request:
+    types: [closed]
+    branches: ["master", "main"]
+  push:
+    branches: ["master", "main"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      sites: ${{ steps.upstream-sites.outputs.sites }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.1.0
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.1"
+
+      - name: Installing Terminus
+        uses: kyletaylored/terminus-github-actions@main
+        with:
+          pantheon-machine-token: ${{ secrets.PANTHEON_MACHINE_TOKEN }}
+
+      - name: Clean up multidev
+        if: github.event_name == 'pull_request'
+        run: |
+          PR_BRANCH_NAME="pr-${{ github.event.pull_request.number }}"
+          CANARY_SITE=$(terminus org:site:list ${ORG_UUID} --format list --upstream ${UPSTREAM_UUID} --field name --tag canary | head -1)
+          if terminus env:info $CANARY_SITE.$PR_BRANCH_NAME > /dev/null 2>&1; then
+            terminus env:delete $CANARY_SITE.$PR_BRANCH_NAME -y --delete-branch
+          fi
+
+          # Check if PR was merged
+          if [ "${{ github.event.pull_request.merged }}" = "true" ]; then
+            echo "The PR was merged, continuing with deployment..."
+          else
+            echo "The PR was closed without merging. Exiting..."
+            exit 78 # Use exit code 78 to halt the workflow without failing
+          fi
+        env:
+          ORG_UUID: ${{ secrets.PANTHEON_ORG_UUID }}
+          UPSTREAM_UUID: ${{ secrets.PANTHEON_UPSTREAM_UUID }}
+
+      - name: Get Deployment Sites
+        id: upstream-sites
+        run: |
+          SITES=$(terminus org:site:list ${ORG_UUID} --format list --upstream ${UPSTREAM_UUID} --field name | sort -V | tr '\n' ',' | sed 's/,$//')
+          JSON_SITES="[\"$(echo "$SITES" | sed 's/,/","/g')\"]"
+          echo "sites=$JSON_SITES" >> "$GITHUB_OUTPUT"
+        env:
+          ORG_UUID: ${{ secrets.PANTHEON_ORG_UUID }}
+          UPSTREAM_UUID: ${{ secrets.PANTHEON_UPSTREAM_UUID }}
+
+  deploy:
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request'
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        site: ${{fromJson(needs.build.outputs.sites)}}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.1.0
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.1"
+
+      - name: Installing Terminus
+        uses: kyletaylored/terminus-github-actions@main
+        with:
+          pantheon-machine-token: ${{ secrets.PANTHEON_MACHINE_TOKEN }}
+
+      - name: Apply upstream updates
+        run: |
+          SITE=${{ matrix.site }}
+          DEV=$(echo "${SITE}.dev")
+          TEST=$(echo "${SITE}.test")
+          START=$SECONDS
+
+          echo -e "Starting deploy for ${SITE}...";
+
+          # Check site upstream for updates, apply
+          terminus site:upstream:clear-cache $SITE
+
+          terminus connection:set $DEV git
+          terminus upstream:updates:apply $DEV --accept-upstream
+
+          # Clear cache
+          terminus env:clear-cache $DEV
+
+          # Deploy code to test and live
+
+          # Report time to results.
+          DURATION=$(( SECONDS - START ))
+          TIME_DIFF=$(bc <<< "scale=2; $DURATION / 60")
+          MIN=$(printf "%.2f" $TIME_DIFF)
+          echo -e "Finished ${SITE} in ${MIN} minutes"
