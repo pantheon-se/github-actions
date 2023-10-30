@@ -1,4 +1,4 @@
-# Custom Upstream Branch Sync and Multidev Creation
+# Custom Upstream Multidev and Deployment Workflows
 
 When using a Custom Upstream, sync new upstream branches automatically to a downstream Pantheon repo and create a multidev environment. As-is, this requires a site to be tagged with `canary` that will recieve the update.
 
@@ -10,6 +10,7 @@ When using a Custom Upstream, sync new upstream branches automatically to a down
 - `PANTHEON_SSH_KEY`: The PRIVATE SSH key that is associated with the public key that has been added to the Pantheon user account.
 - `SSH_CONFIG`: A basic SSH config when connecting to the `drush.in` addresses for running WP / Drush commands.
 - `KNOWN_HOSTS`: You do not need a known_hosts config unless required, so this only needs to be a single space as the secret variable content.
+- `PANTHEON_SITE_UUID` (optional): You can target a very specific site and provide this ID, or you can use a site with the `canary` tag applied through the dashboard.
 
 ## Additional Notes
 
