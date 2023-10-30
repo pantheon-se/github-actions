@@ -11,12 +11,34 @@ When using a Custom Upstream, sync new upstream branches automatically to a down
 - `SSH_CONFIG`: A basic SSH config when connecting to the `drush.in` addresses for running WP / Drush commands.
 - `KNOWN_HOSTS`: You do not need a known_hosts config unless required, so this only needs to be a single space as the secret variable content.
 
-## Other notes
+## Additional Notes
 
+### Pull Request Comments
 To enable commenting post-back support on Pull Requests, you need to enable permissions for Github Actions.
 
 1. Go to https://github.com/OWNER/REPO/settings/actions
 2. Under Workflow Permissions section, give Actions Read and Write permissions
+
+### SSH Config
+When adding `SSH_CONFIG`, use the following as a baseline configuration.
+
+```bash
+Host *.drush.in
+  StrictHostKeyChecking no
+```
+
+### SSH Key
+When generating an SSH key, it needs to be in PEM format. You either modify an existing keyfile, or generate a new one.
+
+**Create new PEM key**
+```bash
+ssh-keygen -m PEM -f <path_to_key_file>
+```
+
+**Modify existing key**
+```bash
+ssh-keygen -p -m PEM -f <path_to_key_file>
+```
 
 ## Workflow Overview
 
