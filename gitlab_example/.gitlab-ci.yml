@@ -1,0 +1,22 @@
+stages:
+  - build_config
+  - run
+
+setup:
+  stage: build_config
+  image: quay.io/pantheon-public/build-tools-ci:8.x-php8.1
+  script:
+    - ./scripts/generate-config
+  artifacts:
+    paths:
+      - gitlab_jobs.yml
+
+trigger_jobs:
+  stage: run
+  trigger:
+    include:
+      - artifact: gitlab_jobs.yml
+        job: setup
+    strategy: depend
+  variables:
+    PARENT_PIPELINE_ID: $CI_PIPELINE_ID

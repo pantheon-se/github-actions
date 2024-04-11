@@ -8,6 +8,7 @@ A list of Github Action workflows that can be used to integrate with Pantheon th
 - [Scheduled Terminus Tasks](/scheduled_terminus_tasks)
 - [Automated Upstream Sync](/upstream_core_sync)
 - [Custom Upstream and Multidev Creation](/custom_upstream_branch_sync)
+- [Gitlab Deployment Example](/gitlab_example)
 
 ## Github Actions Cheat Sheet
 

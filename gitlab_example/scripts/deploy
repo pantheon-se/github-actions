@@ -1,0 +1,27 @@
+#!/bin/bash
+
+# Exit on error
+set -e
+
+# Fix Terminus session
+mkdir -p ~/.terminus/cache/
+cp .terminus-session ~/.terminus/cache/session
+
+# Add SSH auth for drush
+eval $(ssh-agent -s) && ssh-add <(echo "$SSH_PRIVATE_KEY")
+
+echo $SITE
+echo "Listing upstream updates"
+terminus upstream:updates:list $SITE.dev
+    
+#echo "Creating backup for $SITE"
+#terminus backup:create --keep-for 30 $SITE.dev
+
+echo "Applying upstream updates to $SITE"
+terminus upstream:updates:apply --updatedb --accept-upstream $SITE.dev
+   
+echo "Copying Dev to Test for $SITE"
+terminus env:deploy $SITE.test --updatedb
+   
+echo "Copying Test to Live for $SITE"
+terminus env:deploy $SITE.live --updatedb

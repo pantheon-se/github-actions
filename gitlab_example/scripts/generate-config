@@ -1,0 +1,42 @@
+#!/bin/bash
+
+# Exit on error
+set -e
+
+# Authenticate Terminus, store session to local path.
+terminus -n auth:login --machine-token="$TERMINUS_TOKEN"
+
+# Stash list of all Pantheon sites in the org
+PANTHEON_SITES="$(terminus org:site:list ${ORG_ID} --format list --upstream ${UPSTREAM_ID} --field name)"
+
+# Remove new lines and insert commas inbetween
+SITES_ARRAY="${PANTHEON_SITES//$'\n'/, }"
+
+cat <<EOT > gitlab_jobs.yml
+# Build tools Dockerfile
+image: quay.io/pantheon-public/build-tools-ci:8.x-php8.1
+
+stages:
+  - auth
+  - deploy
+
+terminus-auth:
+  stage: auth
+  environment: production
+  artifacts:
+    paths:
+      - .terminus-session
+  script:
+    - terminus -n auth:login --machine-token="$TERMINUS_TOKEN"
+    - cp ~/.terminus/cache/session .terminus-session
+
+parallel-deploy-job:      
+  stage: deploy
+  environment: production
+  parallel:
+    matrix: 
+      - SITE: [$SITES_ARRAY]
+  script:
+    - ./scripts/deploy
+  needs: ["terminus-auth"]
+EOT
