@@ -5,7 +5,7 @@ A poor man's way to execute Terminus commands via a Web API, using Github Reposi
 **This does not require any of the code from the repository the Github Action workflow is associated with.*
 
 ## Secrets Required
-- Terminus Machine Toke (`TERMINUS_MACHINE_TOKEN`)
+- Terminus Machine Token (`TERMINUS_MACHINE_TOKEN`)
 - SSH Key in PEM format (`PRIVATE_SSH_KEY`)
 
 You will also need a personal **Github Token** to trigger the repository dispatch.
