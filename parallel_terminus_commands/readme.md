@@ -8,7 +8,7 @@ When running commands against a large number of sites, we can run these tasks as
 The general approach for this requires wrapping multiple Terminus commands into a single shell script that accepts a Site ID, which can then be used in a asynchronous loop or parallel method.
 
 ## Secrets Required
-- Terminus Machine Toke (`TERMINUS_MACHINE_TOKEN`)
+- Terminus Machine Token (`TERMINUS_MACHINE_TOKEN`)
 - SSH Key in PEM format (`PRIVATE_SSH_KEY`)
 - Pantheon Upstream UUID (`UPSTREAM_UUID`)
 - Pantheon Organization UUID (`ORG_UUID`)
